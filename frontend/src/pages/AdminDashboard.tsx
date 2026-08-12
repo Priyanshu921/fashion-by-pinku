@@ -64,6 +64,8 @@ export const AdminDashboard = () => {
   // Interactive Graph Hover State
   const [hoveredPoint, setHoveredPoint] = useState<MonthlyData | null>(null);
   const [hoveredPointCoords, setHoveredPointCoords] = useState<{ x: number; y: number } | null>(null);
+  const [hoveredDonut, setHoveredDonut] = useState<any>(null);
+  const [donutTooltipPos, setDonutTooltipPos] = useState<{x: number, y: number} | null>(null);
 
   useEffect(() => {
     document.title = "Admin Dashboard | FASHION BY PINKU";
@@ -276,13 +278,57 @@ export const AdminDashboard = () => {
   const hasSales = orders.length > 0 && totalRevenue > 0;
   const maxRevenue = Math.max(...monthlySeries.map(m => m.revenue), 1000);
 
+  // City/Region Revenue Data
+  const cityRevenue: Record<string, number> = {};
+  orders.forEach(o => {
+    if (o.address?.city) {
+      const city = o.address.city;
+      cityRevenue[city] = (cityRevenue[city] || 0) + (parseFloat(o.totalAmount || o.total) || 0);
+    }
+  });
+  const cityData = Object.entries(cityRevenue)
+    .map(([city, revenue]) => ({ city, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  // Category Distribution (Donut Chart Math)
+  const catData = categories
+    .map(cat => {
+      const count = products.filter(p => String(p.categoryId) === String(cat.id)).length;
+      return { name: cat.name, count };
+    })
+    .filter(c => c.count > 0);
+  
+  const totalCatProducts = catData.reduce((sum, c) => sum + c.count, 0);
+  let cumulativePercent = 0;
+  const donutPaths = catData.map(cat => {
+    const startPercent = cumulativePercent;
+    const percent = cat.count / totalCatProducts;
+    cumulativePercent += percent;
+    const endPercent = cumulativePercent;
+    
+    const startX = Math.cos(2 * Math.PI * startPercent);
+    const startY = Math.sin(2 * Math.PI * startPercent);
+    const endX = Math.cos(2 * Math.PI * endPercent);
+    const endY = Math.sin(2 * Math.PI * endPercent);
+    
+    const largeArcFlag = percent > 0.5 ? 1 : 0;
+    
+    const pathData = percent === 1 
+      ? "M 1 0 A 1 1 0 1 1 -1 0 A 1 1 0 1 1 1 0"
+      : `M ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`;
+      
+    return { ...cat, pathData, percent };
+  });
+
   // SVG Points Calculation for Line Chart
   const svgWidth = 600;
   const svgHeight = 180;
-  const padding = 20;
+  const paddingX = 40;
+  const paddingY = 20;
   const points = monthlySeries.map((item, idx) => {
-    const x = padding + (idx / (monthlySeries.length - 1)) * (svgWidth - padding * 2);
-    const y = svgHeight - padding - (item.revenue / maxRevenue) * (svgHeight - padding * 2);
+    const x = paddingX + (idx / (monthlySeries.length - 1)) * (svgWidth - paddingX * 2);
+    const y = svgHeight - paddingY - (item.revenue / maxRevenue) * (svgHeight - paddingY * 2);
     return { x, y, data: item };
   });
 
@@ -303,7 +349,7 @@ export const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen pt-32 pb-24 px-4 sm:px-6 lg:px-8 bg-brand-black text-white">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto w-full overflow-x-hidden">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 border-b border-white/10 pb-6">
           <div>
@@ -325,7 +371,7 @@ export const AdminDashboard = () => {
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <BarChart3 size={15} /> Analytics
+              <BarChart3 size={15} className="shrink-0" /> Analytics
             </button>
             <button
               onClick={() => setActiveTab('products')}
@@ -335,7 +381,7 @@ export const AdminDashboard = () => {
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Package size={15} /> Products ({products.length})
+              <Package size={15} className="shrink-0" /> Products ({products.length})
             </button>
             <button
               onClick={() => setActiveTab('categories')}
@@ -345,7 +391,7 @@ export const AdminDashboard = () => {
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Layers size={15} /> Categories ({categories.length})
+              <Layers size={15} className="shrink-0" /> Categories ({categories.length})
             </button>
             <button
               onClick={() => setActiveTab('orders')}
@@ -355,7 +401,7 @@ export const AdminDashboard = () => {
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              <ShoppingBag size={15} /> Orders ({totalOrdersCount})
+              <ShoppingBag size={15} className="shrink-0" /> Orders ({totalOrdersCount})
             </button>
           </div>
         </div>
@@ -365,39 +411,39 @@ export const AdminDashboard = () => {
           <div className="space-y-12">
             {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(255,209,220,0.1)]">
                 <div className="flex items-center justify-between text-white/50 mb-3">
                   <span className="font-mono text-xs uppercase tracking-widest">Total Revenue</span>
-                  <DollarSign size={18} className="text-brand-pink" />
+                  <DollarSign size={18} className="text-brand-pink shrink-0" />
                 </div>
                 <div className="text-3xl font-serif text-white">₹{totalRevenue.toLocaleString()}</div>
                 <div className="flex items-center gap-1 text-emerald-400 text-xs font-mono mt-2">
-                  <TrendingUp size={12} /> Live order telemetry
+                  <TrendingUp size={12} className="shrink-0" /> Live order telemetry
                 </div>
               </div>
 
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(255,209,220,0.1)]">
                 <div className="flex items-center justify-between text-white/50 mb-3">
                   <span className="font-mono text-xs uppercase tracking-widest">Total Orders</span>
-                  <ShoppingBag size={18} className="text-brand-pink" />
+                  <ShoppingBag size={18} className="text-brand-pink shrink-0" />
                 </div>
                 <div className="text-3xl font-serif text-white">{totalOrdersCount}</div>
                 <div className="text-white/40 text-xs font-mono mt-2">Completed & active orders</div>
               </div>
 
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(255,209,220,0.1)]">
                 <div className="flex items-center justify-between text-white/50 mb-3">
                   <span className="font-mono text-xs uppercase tracking-widest">Active Products</span>
-                  <Package size={18} className="text-brand-pink" />
+                  <Package size={18} className="text-brand-pink shrink-0" />
                 </div>
                 <div className="text-3xl font-serif text-white">{products.length}</div>
                 <div className="text-white/40 text-xs font-mono mt-2">Catalog items online</div>
               </div>
 
-              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+              <div className="bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(255,209,220,0.1)]">
                 <div className="flex items-center justify-between text-white/50 mb-3">
                   <span className="font-mono text-xs uppercase tracking-widest">Categories</span>
-                  <Layers size={18} className="text-brand-pink" />
+                  <Layers size={18} className="text-brand-pink shrink-0" />
                 </div>
                 <div className="text-3xl font-serif text-white">{categories.length}</div>
                 <div className="text-white/40 text-xs font-mono mt-2">Active fashion lines</div>
@@ -423,26 +469,32 @@ export const AdminDashboard = () => {
               {!hasSales ? (
                 <div className="w-full h-64 flex flex-col items-center justify-center bg-black/40 border border-dashed border-white/10 rounded-xl relative overflow-hidden">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffd1dc_1px,transparent_1px)] [background-size:16px_16px]" />
-                  <BarChart3 size={40} className="text-brand-pink/50 mb-3 animate-pulse" />
+                  <BarChart3 size={40} className="text-brand-pink/50 mb-3 animate-pulse shrink-0" />
                   <h4 className="text-white font-serif text-lg">Telemetry Initializing</h4>
                   <p className="text-white/40 text-xs font-mono mt-1">Awaiting your first customer order to plot live revenue growth curve.</p>
                 </div>
               ) : (
-                <div className="w-full h-64 relative">
+                <div className="w-full h-64 relative group">
                   {/* Floating Interactive Tooltip */}
                   {hoveredPoint && hoveredPointCoords && (
                     <div 
-                      className="absolute z-20 bg-black/95 border border-white/20 px-4 py-3 rounded-xl shadow-[0_0_30px_rgba(255,209,220,0.15)] pointer-events-none transition-all duration-300 transform -translate-x-1/2 -translate-y-[calc(100%+16px)] backdrop-blur-xl"
+                      className="absolute z-20 bg-[#111]/80 border border-white/10 px-5 py-4 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-none transition-all duration-300 transform -translate-x-1/2 -translate-y-[calc(100%+24px)] backdrop-blur-md"
                       style={{ left: `${(hoveredPointCoords.x / svgWidth) * 100}%`, top: `${(hoveredPointCoords.y / svgHeight) * 100}%` }}
                     >
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-black/95 border-b border-r border-white/20 rotate-45"></div>
-                      <p className="text-white/60 font-mono text-[10px] tracking-[0.2em] uppercase mb-1">{hoveredPoint.month}</p>
-                      <p className="text-brand-pink text-xl font-serif tracking-wide">₹{hoveredPoint.revenue.toLocaleString()}</p>
-                      <p className="text-white/40 text-[10px] font-mono mt-1">{hoveredPoint.orders} order(s)</p>
+                      <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-1">{hoveredPoint.month}</p>
+                      <p className="text-brand-pink text-2xl font-serif tracking-wide">₹{hoveredPoint.revenue.toLocaleString()}</p>
+                      <p className="text-white/60 text-[11px] font-mono mt-1">{hoveredPoint.orders} order(s)</p>
                     </div>
                   )}
 
-                  <svg className="w-full h-full overflow-visible" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none">
+                  
+                  {hoveredPointCoords && (
+                    <div 
+                      className="absolute z-10 w-[12px] h-[12px] bg-black border-[3px] border-brand-pink rounded-full pointer-events-none shadow-[0_0_12px_rgba(255,209,220,1)] transition-all duration-200 transform -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${(hoveredPointCoords.x / svgWidth) * 100}%`, top: `${(hoveredPointCoords.y / svgHeight) * 100}%` }}
+                    />
+                  )}
+                  <svg className="w-full h-full overflow-hidden" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none">
                     <style>
                       {`
                         @keyframes drawPath {
@@ -463,46 +515,34 @@ export const AdminDashboard = () => {
                       `}
                     </style>
 
-                    {/* Grid Lines */}
-                    <line x1="0" y1="40" x2={svgWidth} y2="40" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 4" />
-                    <line x1="0" y1="80" x2={svgWidth} y2="80" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 4" />
-                    <line x1="0" y1="120" x2={svgWidth} y2="120" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 4" />
-                    <line x1="0" y1="160" x2={svgWidth} y2="160" stroke="rgba(255,255,255,0.03)" strokeDasharray="2 4" />
-
-                    {/* Interactive Vertical Guideline */}
-                    {hoveredPointCoords && (
-                      <line 
-                        x1={hoveredPointCoords.x} 
-                        y1="0" 
-                        x2={hoveredPointCoords.x} 
-                        y2={svgHeight} 
-                        stroke="#ffd1dc" 
-                        strokeWidth="1" 
-                        strokeDasharray="4 4" 
-                        className="opacity-40 transition-all duration-300"
-                      />
-                    )}
+                    {/* Faint Dashed Horizontal Grid Lines */}
+                    {[40, 80, 120, 160].map((y, i) => (
+                      <line key={i} x1="0" y1={y} x2={svgWidth} y2={y} stroke="rgba(255,255,255,0.1)" strokeDasharray="4 4" />
+                    ))}
 
                     {/* Gradient Fill under Path */}
                     <defs>
                       <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#ffd1dc" stopOpacity="0.4" />
+                        <stop offset="0%" stopColor="#ffd1dc" stopOpacity="0.5" />
                         <stop offset="100%" stopColor="#ffd1dc" stopOpacity="0.0" />
                       </linearGradient>
+                      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
                     </defs>
 
                     {areaD && <path d={areaD} fill="url(#pinkGradient)" className="animated-area pointer-events-none" />}
-                    {pathD && <path d={pathD} fill="none" stroke="#ffd1dc" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animated-path pointer-events-none drop-shadow-[0_0_8px_rgba(255,209,220,0.6)]" />}
+                    {pathD && <path d={pathD} fill="none" stroke="#ffd1dc" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" className="animated-path pointer-events-none" />}
 
-                    {/* Interactive Data Nodes */}
+                    {/* Interactive Data Nodes (Hidden initially, transparent for catching events) */}
                     {points.map((pt, idx) => (
                       <g key={idx} className="cursor-pointer">
                         <circle
                           cx={pt.x}
                           cy={pt.y}
-                          r="5"
-                          className="fill-black stroke-brand-pink stroke-[2.5px] hover:scale-150 origin-center transition-transform duration-300"
-                          style={{ transformOrigin: `${pt.x}px ${pt.y}px` }}
+                          r="20"
+                          fill="transparent"
                           onMouseEnter={() => {
                             setHoveredPoint(pt.data);
                             setHoveredPointCoords({ x: pt.x, y: pt.y });
@@ -512,47 +552,118 @@ export const AdminDashboard = () => {
                             setHoveredPointCoords(null);
                           }}
                         />
+                        
                       </g>
                     ))}
                   </svg>
 
                   {/* X-Axis Month Labels */}
-                  <div className="flex justify-between text-[11px] font-mono text-white/40 mt-4">
-                    {recentMonths.map((m, i) => (
-                      <span key={i}>{m}</span>
+                  <div className="relative w-full h-4 mt-4 text-[11px] font-mono text-white/40">
+                    {points.map((pt, i) => (
+                      <span key={i} className="absolute transform -translate-x-1/2" style={{ left: `${(pt.x / svgWidth) * 100}%` }}>
+                        {pt.data.month}
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* SVG Bar Chart for Category Distribution */}
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-md">
-              <h3 className="text-xl font-serif uppercase tracking-widest text-white mb-2">Category Distribution</h3>
-              <p className="text-white/50 text-xs font-mono uppercase mb-6">Real catalog proportions</p>
+            {/* New Row: Geographical & Category Distributions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Area-Wise Sales */}
+              <div className="bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-md">
+                <h3 className="text-xl font-serif uppercase tracking-widest text-white mb-2">Area-Wise Sales</h3>
+                <p className="text-white/50 text-xs font-mono uppercase mb-8">Revenue by Region/City</p>
 
-              <div className="space-y-4">
-                {categories.length === 0 ? (
-                  <p className="text-white/40 font-mono text-sm">No categories registered yet.</p>
-                ) : (
-                  categories.map((cat) => {
-                    const catCount = products.filter(p => p.categoryId === cat.id).length;
-                    const percentage = products.length > 0 ? Math.round((catCount / products.length) * 100) : 0;
-                    return (
-                      <div key={cat.id} className="space-y-1 group">
+                <div className="space-y-6">
+                  {cityData.length === 0 ? (
+                    <p className="text-white/40 font-mono text-sm">No regional data available yet.</p>
+                  ) : (
+                    cityData.map((d, i) => (
+                      <div key={i} className="space-y-2 group">
                         <div className="flex justify-between text-xs font-mono text-white/80 group-hover:text-brand-pink transition-colors">
-                          <span>{cat.name}</span>
-                          <span>{catCount} product(s) ({percentage}%)</span>
+                          <span className="uppercase tracking-wider">{d.city}</span>
+                          <span className="font-bold">₹{d.revenue.toLocaleString()}</span>
                         </div>
-                        <div className="w-full bg-white/10 h-3 rounded-full overflow-hidden">
+                        <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5">
                           <div
-                            className="bg-brand-pink h-full rounded-full transition-all duration-700 group-hover:bg-white"
-                            style={{ width: `${percentage}%` }}
-                          />
+                            className="bg-brand-pink h-full rounded-full transition-all duration-1000 group-hover:shadow-[0_0_10px_rgba(255,209,220,0.8)] relative"
+                            style={{ width: `${(d.revenue / cityData[0].revenue) * 100}%` }}
+                          >
+                             <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/30 rounded-full" />
+                          </div>
                         </div>
                       </div>
-                    );
-                  })
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Modern Donut Chart for Category Distribution */}
+              <div className="bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-md flex flex-col">
+                <h3 className="text-xl font-serif uppercase tracking-widest text-white mb-2">Category Spread</h3>
+                <p className="text-white/50 text-xs font-mono uppercase mb-8">Product distribution by sector</p>
+
+                {categories.length === 0 || totalCatProducts === 0 ? (
+                  <p className="text-white/40 font-mono text-sm flex-1 flex items-center justify-center">No category data to display.</p>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center gap-8 flex-col sm:flex-row">
+                    <div className="relative w-48 h-48 shrink-0" 
+                      onMouseMove={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setDonutTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredDonut(null);
+                        setDonutTooltipPos(null);
+                      }}
+                    >
+                      {hoveredDonut && donutTooltipPos && (
+                        <div 
+                          className="absolute z-30 bg-[#111]/90 border border-white/10 px-4 py-2 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-none transition-transform duration-75 backdrop-blur-md transform -translate-x-1/2 -translate-y-full min-w-max"
+                          style={{ left: donutTooltipPos.x, top: donutTooltipPos.y - 10 }}
+                        >
+                          <p className="text-white/50 font-mono text-[10px] tracking-widest uppercase mb-1">{hoveredDonut.name}</p>
+                          <p className="text-white font-serif text-lg">{hoveredDonut.count} <span className="text-white/50 text-xs">Items</span></p>
+                        </div>
+                      )}
+                      <svg viewBox="-1.5 -1.5 3 3" className="w-full h-full transform -rotate-90">
+                        {donutPaths.map((cat, i) => (
+                          <path
+                            key={i}
+                            d={cat.pathData}
+                            fill="none"
+                            stroke={[`#ffd1dc`, `#e6c27a`, `#ff69b4`, `#db7093`, `#c71585`][i % 5]}
+                            strokeWidth="0.35"
+                            strokeLinecap="round"
+                            className="transition-all duration-300 hover:stroke-white cursor-pointer origin-center hover:scale-105"
+                            onMouseEnter={() => setHoveredDonut(cat)}
+                          />
+                        ))}
+                      </svg>
+                      {/* Center hole text */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span className="text-2xl font-serif text-white">{totalCatProducts}</span>
+                        <span className="text-[10px] font-mono text-white/50 uppercase">Products</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 flex-1 w-full mt-4 sm:mt-0">
+                      {donutPaths.map((cat, i) => (
+                        <div key={i} className="flex items-center justify-between text-xs font-mono">
+                          <div className="flex items-center gap-3">
+                            <span 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: [`#ffd1dc`, `#e6c27a`, `#ff69b4`, `#db7093`, `#c71585`][i % 5] }} 
+                            />
+                            <span className="text-white/80">{cat.name}</span>
+                          </div>
+                          <span className="text-white/50">{Math.round(cat.percent * 100)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
