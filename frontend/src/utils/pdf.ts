@@ -189,7 +189,13 @@ export const generateInvoice = async (order: any) => {
   // ─────────────────────────────────────────────
   y += 6;
 
-  const cols = ['#', 'Description', 'Price', 'Qty', 'Amount'];
+  const cols = [
+    { content: '#', styles: { halign: 'center' as const } },
+    { content: 'Description', styles: { halign: 'left' as const } },
+    { content: 'Price', styles: { halign: 'right' as const } },
+    { content: 'Qty', styles: { halign: 'center' as const } },
+    { content: 'Amount', styles: { halign: 'right' as const } },
+  ];
   const rows: (string | number)[][] = [];
   let subtotal = 0;
 
