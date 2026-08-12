@@ -6,7 +6,7 @@ async function testUpload() {
     const loginRes = await fetch('http://localhost:3000/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'pinku@fashionbypinku.com', password: 'Pinku@Fashion2026!' })
+      body: JSON.stringify({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD })
     });
     const loginData = await loginRes.json();
     const token = loginData.token;
