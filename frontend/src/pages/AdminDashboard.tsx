@@ -207,7 +207,7 @@ export const AdminDashboard = () => {
   };
 
   // --- Pure Real Analytics Calculation (No Mock Defaults) ---
-  const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + (parseFloat(o.totalAmount || o.total) || 0), 0);
   const totalOrdersCount = orders.length;
 
   // Monthly Revenue Grouping from Real Orders
@@ -223,7 +223,7 @@ export const AdminDashboard = () => {
       const d = new Date(o.createdAt);
       return monthNames[d.getMonth()] === month;
     });
-    const rev = monthOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    const rev = monthOrders.reduce((sum, o) => sum + (parseFloat(o.totalAmount || o.total) || 0), 0);
     return { month, revenue: rev, orders: monthOrders.length };
   });
 
@@ -775,7 +775,7 @@ export const AdminDashboard = () => {
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-xs font-mono text-brand-pink font-bold">ORDER #{ord.id}</span>
-                        <p className="text-sm font-serif text-white mt-1">Customer: {ord.User?.name || ord.User?.email || 'Guest'}</p>
+                        <p className="text-sm font-serif text-white mt-1">Customer: {ord.user?.name || ord.User?.name || ord.user?.email || ord.User?.email || 'Guest'}</p>
                       </div>
                       <span className="text-xs font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full font-bold">
                         {ord.status || 'PAID'}
@@ -783,7 +783,7 @@ export const AdminDashboard = () => {
                     </div>
 
                     <div className="flex justify-between items-center text-xs font-mono text-white/60 border-t border-white/5 pt-3">
-                      <span>Total Amount: <strong className="text-white">₹{ord.total}</strong></span>
+                      <span>Total Amount: <strong className="text-white">₹{ord.totalAmount || ord.total}</strong></span>
                       <span>Date: {new Date(ord.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
