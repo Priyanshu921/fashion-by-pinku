@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2 } from 'lucide-react';
+import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download, ExternalLink, Printer } from 'lucide-react';
+import { generateInvoice } from '../utils/pdf';
 import { Link } from 'react-router-dom';
 import axios from '../api';
 
@@ -169,6 +170,23 @@ export const UserProfile: React.FC = () => {
         goeyToast.error('Failed to remove address');
       });
     }
+  };
+
+  const getTrackingLink = (courier: string | undefined, trackingNumber: string | undefined) => {
+    if (!courier || !trackingNumber) return null;
+    const c = courier.toLowerCase().replace(/\\s+/g, '');
+    const t = encodeURIComponent(trackingNumber.trim());
+    
+    if (c.includes('delhivery')) return `https://www.delhivery.com/tracking?id=${t}`;
+    if (c.includes('ecom') || c.includes('ecomexpress')) return `https://ecomexpress.in/tracking/?awb=${t}`;
+    if (c.includes('xpressbees')) return `https://www.xpressbees.com/track?awb=${t}`;
+    if (c.includes('shadowfax')) return `https://tracker.shadowfax.in/track?awb=${t}`;
+    if (c.includes('bluedart')) return `https://www.bluedart.com/tracking`;
+    if (c.includes('dtdc')) return `https://www.dtdc.in/`;
+    if (c.includes('indiapost')) return `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx`;
+    
+    // Fallback to a universal parcel tracker
+    return `https://www.17track.net/en/track?nums=${t}`;
   };
 
   return (
@@ -442,6 +460,13 @@ export const UserProfile: React.FC = () => {
                       <span className="text-xs bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full font-bold">
                         {order.status}
                       </span>
+                      <button 
+                        onClick={() => generateInvoice(order)}
+                        className="bg-white/10 hover:bg-brand-pink text-white hover:text-black p-1.5 rounded transition-colors"
+                        title="Download Invoice"
+                      >
+                        <Download size={14} />
+                      </button>
                     </div>
                   </div>
 
@@ -462,23 +487,60 @@ export const UserProfile: React.FC = () => {
                     ))}
                   </div>
 
+                  {/* Tracking Info */}
+                  {(order.trackingNumber || order.courier) && (
+                    <div className="bg-black/30 p-4 rounded-xl border border-brand-pink/20 flex justify-between items-center mt-2">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider font-mono text-brand-pink">Courier</span>
+                        <p className="text-sm font-semibold text-white">{order.courier || 'Standard Shipping'}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] uppercase tracking-wider font-mono text-white/50">Tracking Number</span>
+                        {order.trackingNumber ? (
+                          getTrackingLink(order.courier, order.trackingNumber) ? (
+                            <a href={getTrackingLink(order.courier, order.trackingNumber)!} target="_blank" rel="noreferrer" className="block text-sm font-bold text-emerald-400 hover:underline tracking-widest">
+                              {order.trackingNumber} ↗
+                            </a>
+                          ) : (
+                            <p className="text-sm font-bold text-white tracking-widest">{order.trackingNumber}</p>
+                          )
+                        ) : (
+                          <p className="text-sm text-white/50">Pending</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Order Progress Tracker */}
-                  <div className="pt-4 border-t border-white/10">
+                  <div className="pt-4 border-t border-white/10 mt-4">
                     <div className="flex justify-between items-center text-xs text-gray-400 mb-2">
-                      <span className="flex items-center gap-1 text-green-400 font-semibold">
+                      <span className={`flex items-center gap-1 font-semibold ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-green-400' : 'text-gray-500'}`}>
                         <CheckCircle2 size={14} /> Placed
                       </span>
-                      <span className="flex items-center gap-1 text-brand-pink font-semibold">
+                      <span className={`flex items-center gap-1 font-semibold ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-brand-pink' : 'text-gray-500'}`}>
                         <Clock size={14} /> Processing
                       </span>
-                      <span className="flex items-center gap-1 text-gray-500">
+                      <span className={`flex items-center gap-1 font-semibold ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-emerald-400' : 'text-gray-500'}`}>
                         <Truck size={14} /> Shipped
                       </span>
-                      <span className="text-gray-500">Delivered</span>
+                      <span className={`flex items-center gap-1 font-semibold ${order.status === 'DELIVERED' ? 'text-green-400' : 'text-gray-500'}`}>
+                        Delivered
+                      </span>
                     </div>
-                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-green-400 to-brand-pink h-full w-1/2 rounded-full"></div>
-                    </div>
+                    {order.status === 'CANCELLED' ? (
+                      <div className="w-full bg-red-500/20 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-red-500 h-full w-full rounded-full"></div>
+                      </div>
+                    ) : (
+                      <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden relative">
+                        <div className={`bg-gradient-to-r from-green-400 to-brand-pink h-full rounded-full transition-all duration-1000 ${
+                          order.status === 'PAID' ? 'w-1/4' :
+                          order.status === 'PROCESSING' ? 'w-1/2' :
+                          order.status === 'SHIPPED' ? 'w-3/4' :
+                          order.status === 'DELIVERED' ? 'w-full' : 'w-0'
+                        }`}></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

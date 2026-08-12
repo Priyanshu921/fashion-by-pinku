@@ -65,6 +65,25 @@ export class OrdersService {
     }
   }
 
+  async updateOrder(id: number, data: any) {
+    try {
+      const order = await Order.findByPk(id);
+      if (!order) {
+        throw new BadRequestException('Order not found');
+      }
+      
+      const { status, trackingNumber, courier } = data;
+      if (status) order.status = status;
+      if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+      if (courier !== undefined) order.courier = courier;
+      
+      await order.save();
+      return order;
+    } catch (err: any) {
+      throw new BadRequestException(err.message || 'Error updating order');
+    }
+  }
+
   async createRazorpayOrder(data: any) {
     const { amount } = data; // amount in INR
     const options = {

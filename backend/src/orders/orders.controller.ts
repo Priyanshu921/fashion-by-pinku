@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -19,6 +19,11 @@ export class OrdersController {
   @Post()
   async createOrder(@Body() data: any) {
     return await this.ordersService.createOrder(data);
+  }
+
+  @Put(':id')
+  async updateOrder(@Param('id') id: string, @Body() data: any) {
+    return await this.ordersService.updateOrder(parseInt(id, 10), data);
   }
 
   @Post('razorpay')

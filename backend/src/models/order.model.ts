@@ -25,6 +25,12 @@ export class Order extends Model {
   @Column({ type: DataType.STRING, defaultValue: 'PENDING' })
   declare status: string;
 
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare trackingNumber: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare courier: string;
+
   @HasMany(() => OrderItem)
   declare items: OrderItem[];
 }

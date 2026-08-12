@@ -10,9 +10,13 @@ import {
   Trash2, 
   TrendingUp, 
   DollarSign,
-  Loader2
+  Loader2,
+  X,
+  Eye,
+  Download
 } from 'lucide-react';
 import axios from '../api';
+import { generateInvoice } from '../utils/pdf';
 
 type TabType = 'analytics' | 'products' | 'categories' | 'orders';
 
@@ -45,9 +49,18 @@ export const AdminDashboard = () => {
 
   // Orders State
   const [orders, setOrders] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [editStatus, setEditStatus] = useState('');
+  const [editTrackingNumber, setEditTrackingNumber] = useState('');
+  const [editCourier, setEditCourier] = useState('');
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
 
   // Delete Confirmation State
   const [deleteConfirm, setDeleteConfirm] = useState<{type: 'product' | 'category', id: number} | null>(null);
+
+  // Form Validation Errors
+  const [productError, setProductError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
 
   // Interactive Graph Hover State
   const [hoveredPoint, setHoveredPoint] = useState<MonthlyData | null>(null);
@@ -91,9 +104,45 @@ export const AdminDashboard = () => {
     return <Navigate to="/" />;
   }
 
+  // --- Order Actions ---
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order);
+    setEditStatus(order.status || 'PAID');
+    setEditTrackingNumber(order.trackingNumber || '');
+    setEditCourier(order.courier || '');
+  };
+
+  const handleUpdateOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrder) return;
+    setIsUpdatingOrder(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/orders/${selectedOrder.id}`, {
+        status: editStatus,
+        trackingNumber: editTrackingNumber,
+        courier: editCourier
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      import('goey-toast').then(({ goeyToast }) => goeyToast.success('Order updated successfully'));
+      setSelectedOrder(null);
+      fetchData();
+    } catch (err: any) {
+      import('goey-toast').then(({ goeyToast }) => goeyToast.error(err.response?.data?.message || 'Failed to update order'));
+    } finally {
+      setIsUpdatingOrder(false);
+    }
+  };
+
   // --- Product Actions ---
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setProductError('');
+    if (!title || !price || !categoryId || !description) {
+      setProductError('Please fill out all fields.');
+      return;
+    }
     setIsUploading(true);
 
     const formData = new FormData();
@@ -183,7 +232,11 @@ export const AdminDashboard = () => {
   // --- Category Actions ---
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryName.trim()) return;
+    setCategoryError('');
+    if (!categoryName.trim()) {
+      setCategoryError('Category name is required.');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -522,7 +575,8 @@ export const AdminDashboard = () => {
                 <Plus size={20} /> Add Product
               </h2>
 
-              <form onSubmit={handleProductSubmit} className="space-y-5">
+              <form onSubmit={handleProductSubmit} noValidate className="space-y-5">
+                {productError && <div className="text-brand-pink text-center text-sm bg-black/50 p-3 border border-brand-pink/30 rounded-lg">{productError}</div>}
                 <div>
                   <label className="block text-xs font-mono text-white/70 uppercase tracking-wider mb-2">Product Title</label>
                   <input
@@ -699,7 +753,8 @@ export const AdminDashboard = () => {
                 <Plus size={20} /> Add Category
               </h2>
 
-              <form onSubmit={handleCategorySubmit} className="space-y-5">
+              <form onSubmit={handleCategorySubmit} noValidate className="space-y-5">
+                {categoryError && <div className="text-brand-pink text-center text-sm bg-black/50 p-3 border border-brand-pink/30 rounded-lg">{categoryError}</div>}
                 <div>
                   <label className="block text-xs font-mono text-white/70 uppercase tracking-wider mb-2">Category Name</label>
                   <input
@@ -784,7 +839,16 @@ export const AdminDashboard = () => {
 
                     <div className="flex justify-between items-center text-xs font-mono text-white/60 border-t border-white/5 pt-3">
                       <span>Total Amount: <strong className="text-white">₹{ord.totalAmount || ord.total}</strong></span>
-                      <span>Date: {new Date(ord.createdAt).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-3">
+                        <span>Date: {new Date(ord.createdAt).toLocaleDateString()}</span>
+                        <button 
+                          onClick={() => generateInvoice(ord)}
+                          className="bg-white/10 hover:bg-brand-pink text-white hover:text-black p-1.5 rounded transition-colors"
+                          title="Download Invoice"
+                        >
+                          <Download size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -816,6 +880,155 @@ export const AdminDashboard = () => {
                 Delete {deleteConfirm.type === 'product' ? 'Product' : 'Category'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div 
+            className="bg-[#111] border border-[#222] rounded-xl shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-xl font-serif text-white uppercase tracking-wider mb-1">
+                  Order #{selectedOrder.id} Details
+                </h3>
+                <p className="text-xs font-mono text-white/50">
+                  Placed on {new Date(selectedOrder.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="text-white/50 hover:text-white p-1 transition-colors cursor-pointer"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Customer & Shipping */}
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono mb-3 flex items-center gap-2">
+                    <ShoppingBag size={14} className="text-brand-pink"/> Customer Info
+                  </h4>
+                  <div className="text-sm text-white/70 space-y-1 font-mono">
+                    <p className="text-white">{selectedOrder.user?.name || selectedOrder.User?.name || 'Guest User'}</p>
+                    <p>{selectedOrder.user?.email || selectedOrder.User?.email}</p>
+                  </div>
+                </div>
+
+                {selectedOrder.address ? (
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono mb-3 flex items-center gap-2">
+                      <Package size={14} className="text-emerald-400"/> Shipping Address
+                    </h4>
+                    <div className="text-sm text-white/70 space-y-1 font-mono">
+                      <p className="text-white font-bold">{selectedOrder.address.fullName}</p>
+                      <p>{selectedOrder.address.phone}</p>
+                      <p>{selectedOrder.address.streetAddress}</p>
+                      <p>{selectedOrder.address.city}, {selectedOrder.address.state} {selectedOrder.address.zipCode}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10 text-sm text-white/50 font-mono">
+                    No address provided.
+                  </div>
+                )}
+              </div>
+
+              {/* Items Summary */}
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col">
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono mb-3 flex items-center gap-2">
+                  <Layers size={14} className="text-brand-pink"/> Items ({selectedOrder.items?.length || 0})
+                </h4>
+                <div className="flex-1 overflow-y-auto space-y-3 max-h-48 pr-2 custom-scrollbar">
+                  {selectedOrder.items?.map((item: any) => (
+                    <div key={item.id} className="flex gap-3 items-center bg-black/40 p-2 rounded-lg border border-white/5">
+                      {item.Product?.imageSrc && (
+                        <img src={item.Product.imageSrc} alt="" className="w-10 h-10 rounded bg-white/5 object-cover" />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-xs text-white font-semibold line-clamp-1">{item.Product?.title || 'Unknown Product'}</p>
+                        <p className="text-[10px] text-white/50 font-mono">Qty: {item.quantity} x ₹{item.price}</p>
+                      </div>
+                      <div className="text-xs font-bold text-brand-pink">
+                        ₹{item.quantity * item.price}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-sm">
+                  <span className="font-mono text-white/60">Total Amount</span>
+                  <span className="font-bold text-brand-pink text-lg">₹{selectedOrder.totalAmount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Controls */}
+            <form onSubmit={handleUpdateOrder} className="bg-brand-pink/5 border border-brand-pink/20 rounded-xl p-5 space-y-4">
+              <h4 className="text-sm font-bold text-brand-pink uppercase tracking-wider font-mono flex items-center gap-2">
+                Manage Delivery Status
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-mono text-white/70 uppercase tracking-wider mb-2">Order Status</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full bg-black/50 border border-brand-pink/30 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-pink focus:outline-none transition-colors font-mono"
+                  >
+                    <option value="PAID" className="bg-black">PAID (Processing)</option>
+                    <option value="SHIPPED" className="bg-black">SHIPPED</option>
+                    <option value="DELIVERED" className="bg-black">DELIVERED</option>
+                    <option value="CANCELLED" className="bg-black">CANCELLED</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-white/70 uppercase tracking-wider mb-2">Courier Name</label>
+                  <input
+                    type="text"
+                    value={editCourier}
+                    onChange={(e) => setEditCourier(e.target.value)}
+                    placeholder="e.g. Delhivery"
+                    className="w-full bg-black/50 border border-brand-pink/30 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-pink focus:outline-none transition-colors font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-white/70 uppercase tracking-wider mb-2">Tracking Number</label>
+                  <input
+                    type="text"
+                    value={editTrackingNumber}
+                    onChange={(e) => setEditTrackingNumber(e.target.value)}
+                    placeholder="AWB123456789"
+                    className="w-full bg-black/50 border border-brand-pink/30 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-pink focus:outline-none transition-colors font-mono"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => generateInvoice(selectedOrder)}
+                  className="flex items-center gap-1.5 text-xs font-mono bg-white/5 hover:bg-white/10 border border-white/10 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Download size={14} /> Download Invoice
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isUpdatingOrder}
+                  className="px-6 py-2 bg-brand-pink text-black text-xs uppercase tracking-wider font-bold font-mono rounded-lg hover:bg-white transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isUpdatingOrder ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+
           </div>
         </div>
       )}

@@ -32,7 +32,7 @@ module.exports = {
         createdAt: now,
         updatedAt: now
       }
-    ], {});
+    ], { ignoreDuplicates: true }).catch(err => console.log('Categories might already exist'));
   },
 
   down: async (queryInterface, Sequelize) => {
