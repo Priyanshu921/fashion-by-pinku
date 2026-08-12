@@ -189,13 +189,7 @@ export const generateInvoice = async (order: any) => {
   // ─────────────────────────────────────────────
   y += 6;
 
-  const cols = [
-    { content: '#', styles: { halign: 'center' as const } },
-    { content: 'Description', styles: { halign: 'left' as const } },
-    { content: 'Price', styles: { halign: 'right' as const } },
-    { content: 'Qty', styles: { halign: 'center' as const } },
-    { content: 'Amount', styles: { halign: 'right' as const } },
-  ];
+  const cols = ['#', 'Description', 'Price', 'Qty', 'Amount'];
   const rows: (string | number)[][] = [];
   let subtotal = 0;
 
@@ -244,6 +238,12 @@ export const generateInvoice = async (order: any) => {
       2: { cellWidth: 32,  halign: 'right' },
       3: { cellWidth: 16,  halign: 'center' },
       4: { cellWidth: 36,  halign: 'right', fontStyle: 'bold', textColor: C.black },
+    },
+    didParseCell: (data) => {
+      if (data.section === 'head') {
+        if (data.column.index === 0 || data.column.index === 3) data.cell.styles.halign = 'center';
+        if (data.column.index === 2 || data.column.index === 4) data.cell.styles.halign = 'right';
+      }
     },
     margin: { left: m, right: m },
   });
