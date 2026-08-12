@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api';
 
 interface AddressItem {
   id: number;

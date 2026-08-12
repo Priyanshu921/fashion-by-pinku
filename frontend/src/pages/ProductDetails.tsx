@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import type { MouseEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import axios from '../api';
 import { Star, CheckCircle2, ShieldCheck, Truck, RotateCcw } from 'lucide-react';
 import { ScrollFadeIn } from '../components/ScrollFadeIn';
 

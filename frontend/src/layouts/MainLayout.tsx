@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import { ShoppingBag, User, LogOut, X, Plus, Minus, Trash2, Shield } from 'lucide-react';
 import Footer from '../components/Footer';

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import ProductZoom from '../components/ProductZoom';
 import { RandomLoader } from '../components/RandomLoader';
 import { ScrollFadeIn } from '../components/ScrollFadeIn';
-import axios from 'axios';
+import axios from '../api';
 
 export const NewArrivals: React.FC = () => {
   const [products, setProducts] = useState<any[] | null>(null);

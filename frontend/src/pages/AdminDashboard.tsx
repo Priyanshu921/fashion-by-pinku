@@ -12,7 +12,7 @@ import {
   DollarSign,
   Loader2
 } from 'lucide-react';
-import axios from 'axios';
+import axios from '../api';
 
 type TabType = 'analytics' | 'products' | 'categories' | 'orders';
 
