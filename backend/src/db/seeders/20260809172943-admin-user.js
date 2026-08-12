@@ -1,0 +1,23 @@
+'use strict';
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    const password = process.env.ADMIN_PASSWORD || 'Pinku@Fashion2026!';
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await queryInterface.bulkInsert('Users', [{
+      email: 'pinku@fashionbypinku.com',
+      password: hashedPassword,
+      name: 'Pinku Admin',
+      phone: '',
+      role: 'ADMIN',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }], {});
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.bulkDelete('Users', { email: 'pinku@fashionbypinku.com' }, {});
+  }
+};
