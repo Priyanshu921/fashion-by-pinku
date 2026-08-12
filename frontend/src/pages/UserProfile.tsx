@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download, ExternalLink, Printer } from 'lucide-react';
+import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download } from 'lucide-react';
 import { generateInvoice } from '../utils/pdf';
 import { Link } from 'react-router-dom';
 import axios from '../api';
@@ -31,6 +31,8 @@ interface OrderData {
   status: string;
   createdAt: string;
   OrderItems: OrderItemData[];
+  trackingNumber?: string;
+  courier?: string;
 }
 
 export const UserProfile: React.FC = () => {

@@ -12,7 +12,6 @@ import {
   DollarSign,
   Loader2,
   X,
-  Eye,
   Download
 } from 'lucide-react';
 import axios from '../api';
@@ -105,12 +104,6 @@ export const AdminDashboard = () => {
   }
 
   // --- Order Actions ---
-  const handleViewOrder = (order: any) => {
-    setSelectedOrder(order);
-    setEditStatus(order.status || 'PAID');
-    setEditTrackingNumber(order.trackingNumber || '');
-    setEditCourier(order.courier || '');
-  };
 
   const handleUpdateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
