@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return !isTokenExpired(token);
   };
 
-  // Global Axios Interceptor for automated token expiration & auto-logout
+  // Global Axios Interceptor for automated token expiration on API calls
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
@@ -65,10 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (error.response?.status === 401) {
           const token = localStorage.getItem('token');
           if (token || user) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUser(null);
-
+            logout();
             import('goey-toast').then(({ goeyToast }) => {
               goeyToast.error('Session Expired', {
                 description: 'Your security token has expired. Please log in again.',
@@ -88,6 +85,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       axios.interceptors.response.eject(interceptor);
     };
   }, [user]);
+
+  // Background monitor to auto-logout if token expires while tab is open
+  useEffect(() => {
+    const checkExpiration = () => {
+      const token = localStorage.getItem('token');
+      if (token && isTokenExpired(token)) {
+        logout();
+        import('goey-toast').then(({ goeyToast }) => {
+          goeyToast.error('Session Expired', {
+            description: 'Your security token has expired due to inactivity. Please log in again.',
+          });
+        });
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+    };
+
+    // Check immediately and then every 30 seconds
+    checkExpiration();
+    const interval = setInterval(checkExpiration, 30_000);
+    // Also check when user refocuses the tab
+    window.addEventListener('focus', checkExpiration);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', checkExpiration);
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isTokenValid }}>
