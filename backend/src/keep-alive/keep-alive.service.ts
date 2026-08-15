@@ -23,7 +23,7 @@ export class KeepAliveService {
    * Falls back to localhost for local development (where pings are skipped anyway).
    */
   private readonly appUrl =
-    process.env.APP_URL ?? 'http://localhost:3000';
+    process.env.APP_URL ?? process.env.RENDER_EXTERNAL_URL ?? 'http://localhost:3000';
 
   // Cron expression breakdown:  "0 */5 * * * *"
   //  - Seconds:  0          → trigger at the 0-second mark
