@@ -15,14 +15,14 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0a0a0a] pt-24 pb-12 font-sans text-gray-400 mt-auto">
+    <footer className="bg-[#0a0a0a] pt-16 sm:pt-24 pb-8 sm:pb-12 font-sans text-gray-400 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-16">
           
           {/* Column 1: Brand Info & Socials */}
           <div className="md:col-span-1 flex flex-col items-start">
-            <Link to="/" className="inline-block mb-6 -ml-4 md:-ml-6">
-              <img src="/logo.svg" alt="FashionByPinku" className="h-24 md:h-28 w-auto hover:scale-105 transition-transform duration-300" />
+            <Link to="/" className="inline-block mb-6 -ml-2 sm:-ml-4 md:-ml-6">
+              <img src="/logo.svg" alt="FashionByPinku" className="h-16 sm:h-24 md:h-28 w-auto hover:scale-105 transition-transform duration-300" />
             </Link>
             <p className="text-sm leading-relaxed tracking-wide mb-8">
               Elevating everyday style with ultra-premium, exclusive designs created for the modern woman.

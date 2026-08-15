@@ -348,12 +348,12 @@ export const AdminDashboard = () => {
     : '';
 
   return (
-    <div className="min-h-screen pt-32 pb-24 px-4 sm:px-6 lg:px-8 bg-brand-black text-white">
+    <div className="min-h-screen pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 bg-brand-black text-white">
       <div className="max-w-[1400px] mx-auto w-full overflow-x-hidden">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 border-b border-white/10 pb-6">
           <div>
-            <h1 className="text-3xl md:text-5xl font-serif uppercase tracking-widest text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-serif uppercase tracking-widest text-white">
               Business Cockpit
             </h1>
             <p className="text-white/50 font-mono tracking-widest text-xs uppercase mt-2">
@@ -790,7 +790,7 @@ export const AdminDashboard = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm font-mono">
+                  <table className="w-full text-left text-sm font-mono min-w-[600px]">
                     <thead className="text-xs uppercase text-white/40 border-b border-white/10">
                       <tr>
                         <th className="pb-3">Image</th>

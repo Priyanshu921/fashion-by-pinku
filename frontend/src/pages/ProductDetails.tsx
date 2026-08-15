@@ -103,12 +103,12 @@ export const ProductDetails: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-24 px-6 max-w-7xl mx-auto min-h-screen">
-      <div className="flex flex-col lg:flex-row gap-16 relative">
+    <div className="pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 max-w-7xl mx-auto min-h-screen">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 relative">
         
         {/* Left: Product Image with Zoom */}
         <div className="w-full lg:w-1/2">
-          <div className="sticky top-32">
+          <div className="sticky top-24 sm:top-32">
             <div 
               ref={containerRef}
               className={`relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 ${isDesktop ? 'cursor-crosshair' : ''}`}
@@ -165,7 +165,7 @@ export const ProductDetails: React.FC = () => {
                 {product.category?.name || "Exclusive"}
                 {product.stock > 0 && <span className="text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded text-xs ml-auto">IN STOCK</span>}
               </p>
-              <h1 className="font-serif text-4xl md:text-5xl uppercase tracking-wider leading-tight mb-4">{product.title}</h1>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider leading-tight mb-4">{product.title}</h1>
               
               <div className="flex items-center gap-4 mb-6">
                 <p className="text-3xl font-mono font-bold text-white">₹{product.price}</p>
@@ -206,7 +206,7 @@ export const ProductDetails: React.FC = () => {
                   e.preventDefault();
                   handleAddToCart({ ...product, price: String(product.price) });
                 }}
-                className="w-full cursor-pointer bg-brand-pink text-black px-12 py-5 rounded-full font-bold uppercase tracking-[0.2em] hover:bg-white hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(255,209,220,0.2)]"
+                className="w-full cursor-pointer bg-brand-pink text-black px-8 sm:px-12 py-4 sm:py-5 rounded-full font-bold uppercase tracking-[0.2em] hover:bg-white hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(255,209,220,0.2)]"
               >
                 Add to Cart
               </button>
@@ -216,14 +216,14 @@ export const ProductDetails: React.FC = () => {
       </div>
 
       {/* Reviews Section */}
-      <div className="mt-32 pt-16 border-t border-white/10">
+      <div className="mt-20 sm:mt-32 pt-12 sm:pt-16 border-t border-white/10">
         <ScrollFadeIn>
-          <h2 className="font-serif text-3xl uppercase tracking-widest mb-12 text-center">Customer Reviews</h2>
+          <h2 className="font-serif text-2xl sm:text-3xl uppercase tracking-widest mb-8 sm:mb-12 text-center">Customer Reviews</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             
             {/* Write a review */}
-            <div className="col-span-1 border-r border-white/10 pr-8">
+            <div className="col-span-1 border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 md:pr-8 mb-8 md:mb-0">
               <h3 className="font-mono text-lg uppercase tracking-widest text-brand-pink mb-6">Write a Review</h3>
               {user ? (
                 <form onSubmit={handleReviewSubmit} className="space-y-4">

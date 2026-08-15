@@ -192,10 +192,10 @@ export const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-24 min-h-screen bg-black text-white px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="pt-24 sm:pt-32 pb-16 sm:pb-24 min-h-screen bg-black text-white px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/5 border border-white/10 p-6 md:p-8 rounded-2xl mb-8 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/5 border border-white/10 p-5 sm:p-6 md:p-8 rounded-2xl mb-8 backdrop-blur-md">
         <div className="flex items-center gap-5">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-brand-pink to-purple-600 flex items-center justify-center text-black font-bold text-2xl shadow-lg">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -366,7 +366,7 @@ export const UserProfile: React.FC = () => {
                 required
                 className="w-full px-4 py-2.5 bg-black/60 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-pink"
               />
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                   type="text"
                   placeholder="City"

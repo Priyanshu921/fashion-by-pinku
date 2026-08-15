@@ -232,13 +232,13 @@ export const MainLayout: React.FC = () => {
       
       {/* Navbar */}
       <nav className="fixed w-full z-50 transition-all duration-300 backdrop-blur-md bg-black/50 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex justify-between items-center">
-          <Link to="/" className="flex items-center -ml-3">
-            <img src="/logo.svg" alt="FashionByPinku" className="h-16 w-auto hover:scale-105 transition-transform" />
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-24 flex justify-between items-center">
+          <Link to="/" className="flex items-center -ml-2 md:-ml-3">
+            <img src="/logo.svg" alt="FashionByPinku" className="h-10 md:h-16 w-auto hover:scale-105 transition-transform" />
           </Link>
 
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-8">
+            <div className="flex items-center gap-4 md:gap-6">
               {user ? (
                 <div className="flex items-center gap-4">
                   <Link to="/profile" className="text-white hover:text-brand-pink transition-colors" title="My Profile">
@@ -277,14 +277,14 @@ export const MainLayout: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex justify-end">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
           <div className="relative w-full max-w-md bg-[#111] h-full flex flex-col border-l border-white/10 shadow-2xl animate-slide-left">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
               <h2 className="text-xl font-serif tracking-widest uppercase">{checkoutStep === 'CART' ? 'Your Cart' : 'Checkout'}</h2>
               <button onClick={() => setIsCartOpen(false)} className="text-white/50 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
               {checkoutStep === 'CART' ? (
                 // --- CART LOGIC ---
                 cart.length === 0 ? (
@@ -373,7 +373,7 @@ export const MainLayout: React.FC = () => {
             </div>
             
             {cart.length > 0 && (
-              <div className="p-6 border-t border-white/10 bg-[#0a0a0a] space-y-3">
+              <div className="p-4 sm:p-6 border-t border-white/10 bg-[#0a0a0a] space-y-3">
                 <div className="flex justify-between items-center font-mono text-xs tracking-widest text-white/50 mb-1">
                   <span>SUBTOTAL</span>
                   <span>₹{subtotal.toFixed(2)}</span>
