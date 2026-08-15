@@ -34,10 +34,13 @@ export class KeepAliveService {
   // This fires at :00, :05, :10, :15, etc. of every hour — 12 pings/hour.
   @Cron('0 */5 * * * *')
   async pingHealth(): Promise<void> {
-    // Skip pings outside production to keep local logs clean
-    if (process.env.NODE_ENV !== 'production') {
+    // Skip pings locally to keep logs clean, but always run if on Render
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isRender = !!process.env.RENDER_EXTERNAL_URL;
+
+    if (!isProduction && !isRender) {
       this.logger.debug(
-        '[KeepAlive] Skipping ping in non-production environment.',
+        '[KeepAlive] Skipping ping in local development environment.',
       );
       return;
     }
