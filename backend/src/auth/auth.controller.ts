@@ -66,7 +66,7 @@ export class AuthController {
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies['refreshToken'];
     if (!refreshToken) {
-      throw new UnauthorizedException('No refresh token provided');
+      throw new UnauthorizedException('Session expired, please log in again.');
     }
 
     // Find the user whose hashed refresh token matches
@@ -123,10 +123,10 @@ export class AuthController {
     if (!refreshToken) throw new UnauthorizedException('Not authenticated');
     
     const parts = refreshToken.split('.');
-    if (parts.length !== 2) throw new UnauthorizedException('Invalid session');
+    if (parts.length !== 2) throw new UnauthorizedException('Session expired, please log in again.');
     
     const user = await User.findByPk(parts[0]);
-    if (!user) throw new UnauthorizedException('User not found');
+    if (!user) throw new UnauthorizedException('Account not found.');
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid password');
@@ -142,7 +142,7 @@ export class AuthController {
   async updateProfile(@Body() body: any) {
     const { userId, name, phone, password, currentPassword } = body;
     const user = await User.findByPk(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+    if (!user) throw new UnauthorizedException('Account not found.');
 
     if (password) {
       if (!currentPassword) {

@@ -420,7 +420,7 @@ export const UserProfile: React.FC = () => {
       {/* Logout Everywhere Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-md relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-md relative shadow-2xl">
             <button
               onClick={() => setShowLogoutModal(false)}
               className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"

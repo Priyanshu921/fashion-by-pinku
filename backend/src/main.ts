@@ -7,7 +7,7 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: process.env.APP_URL || ['https://fashionbypinku.onrender.com', 'http://localhost:5173'],
+    origin:  [process.env.APP_URL, 'https://fashionbypinku.onrender.com', 'http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
