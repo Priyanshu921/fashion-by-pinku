@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await axios.post('/api/auth/logout');
+      import('goey-toast').then(({ goeyToast }) => goeyToast.success('Goodbye! You have been logged out.'));
     } catch (err) {
       console.error('Logout failed on backend, clearing local state anyway', err);
     } finally {
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logoutAll = async (password: string) => {
     try {
       await axios.post('/api/auth/logout-all', { password });
+      import('goey-toast').then(({ goeyToast }) => goeyToast.success('Logged out of all devices successfully. Goodbye!'));
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
