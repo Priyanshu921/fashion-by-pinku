@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download, Eye, EyeOff, LogOut, X } from 'lucide-react';
+import { User, MapPin, Package, Heart, Shield, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download, Eye, EyeOff, LogOut, X } from 'lucide-react';
 import { generateInvoice } from '../utils/pdf';
 import { Link } from 'react-router-dom';
 import axios from '../api';
