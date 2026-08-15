@@ -299,24 +299,29 @@ export const ProductDetails: React.FC = () => {
                 reviews.map(review => (
                   <div key={review.id} className="bg-white/5 border border-white/10 rounded-xl p-6">
                     <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <p className="font-mono uppercase text-white/90">{review.user?.name || 'Anonymous'}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex text-brand-pink">
-                            {[...Array(review.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-pink to-purple-600 flex items-center justify-center text-black font-bold text-lg shadow-md shrink-0">
+                          {review.user?.name ? review.user.name.charAt(0).toUpperCase() : 'A'}
+                        </div>
+                        <div>
+                          <p className="font-mono uppercase text-white/90">{review.user?.name || 'Anonymous'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex text-brand-pink">
+                              {[...Array(review.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                            </div>
+                            {review.isVerifiedBuyer && (
+                              <span className="text-[10px] font-bold tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                                <CheckCircle2 size={10} /> Verified Buyer
+                              </span>
+                            )}
                           </div>
-                          {review.isVerifiedBuyer && (
-                            <span className="text-[10px] font-bold tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase flex items-center gap-1">
-                              <CheckCircle2 size={10} /> Verified Buyer
-                            </span>
-                          )}
                         </div>
                       </div>
-                      <span className="text-white/30 text-xs font-mono">
+                      <span className="text-white/30 text-xs font-mono mt-1 shrink-0">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-white/70 text-sm leading-relaxed">{review.comment}</p>
+                    <p className="text-white/70 text-sm leading-relaxed md:ml-14">{review.comment}</p>
                   </div>
                 ))
               )}
