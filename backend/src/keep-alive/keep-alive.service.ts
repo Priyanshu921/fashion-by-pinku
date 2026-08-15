@@ -6,11 +6,11 @@ import { Cron } from '@nestjs/schedule';
 // Pings the application's own /health endpoint on a cron schedule to prevent
 // Render's free tier from spinning down the server due to inactivity.
 //
-// Schedule: Every 12 minutes  →  "0 */12 * * * *"  (well within the 15-min sleep window)
+// Schedule: Every 5 minutes  →  "0 */5 * * * *"  (well within the 15-min sleep window)
 //
 // How it works:
 //  - Render spins down after 15 minutes of *zero inbound traffic*.
-//  - This service generates inbound traffic to itself every 12 minutes.
+//  - This service generates inbound traffic to itself every 5 minutes.
 //  - fetch() is used (built into Node.js >= 18) so there are zero extra dependencies.
 //  - In development (NODE_ENV !== 'production'), pings are skipped to avoid noise.
 @Injectable()
@@ -25,14 +25,14 @@ export class KeepAliveService {
   private readonly appUrl =
     process.env.APP_URL ?? 'http://localhost:3000';
 
-  // Cron expression breakdown:  "0 */12 * * * *"
+  // Cron expression breakdown:  "0 */5 * * * *"
   //  - Seconds:  0          → trigger at the 0-second mark
-  //  - Minutes:  */12       → every 12 minutes
+  //  - Minutes:  */5        → every 5 minutes
   //  - Hours:    *          → every hour
   //  - Day/Month/Weekday: * → every day, every month
   //
-  // This fires at :00, :12, :24, :36, :48 of every hour — 5 pings/hour.
-  @Cron('0 */12 * * * *')
+  // This fires at :00, :05, :10, :15, etc. of every hour — 12 pings/hour.
+  @Cron('0 */5 * * * *')
   async pingHealth(): Promise<void> {
     // Skip pings outside production to keep local logs clean
     if (process.env.NODE_ENV !== 'production') {
