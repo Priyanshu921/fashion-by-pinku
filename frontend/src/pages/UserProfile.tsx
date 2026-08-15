@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download } from 'lucide-react';
+import { User, MapPin, Package, Heart, Shield, Lock, Phone, Mail, Plus, Trash2, CheckCircle2, Clock, Truck, Loader2, Download, Eye, EyeOff, LogOut, X } from 'lucide-react';
 import { generateInvoice } from '../utils/pdf';
 import { Link } from 'react-router-dom';
 import axios from '../api';
@@ -36,14 +36,23 @@ interface OrderData {
 }
 
 export const UserProfile: React.FC = () => {
-  const { user, login } = useAuth();
+  const { user, login, logoutAll } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders' | 'wishlist'>('profile');
 
   // Profile Form State
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Logout All State
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logoutPassword, setLogoutPassword] = useState('');
+  const [showLogoutPassword, setShowLogoutPassword] = useState(false);
+  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
   // Addresses State
   const [addresses, setAddresses] = useState<AddressItem[]>([]);
@@ -102,6 +111,7 @@ export const UserProfile: React.FC = () => {
         userId: user.id,
         name,
         phone,
+        currentPassword: currentPassword || undefined,
         password: password || undefined,
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -115,6 +125,7 @@ export const UserProfile: React.FC = () => {
         goeyToast.success('Profile updated successfully!');
       });
       setPassword('');
+      setCurrentPassword('');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to update profile';
       import('goey-toast').then(({ goeyToast }) => {
@@ -122,6 +133,22 @@ export const UserProfile: React.FC = () => {
       });
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  const handleLogoutAllSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingOutAll(true);
+    try {
+      await logoutAll(logoutPassword);
+      // logoutAll redirects to login
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Incorrect password';
+      import('goey-toast').then(({ goeyToast }) => {
+        goeyToast.error('Logout Failed', { description: msg });
+      });
+    } finally {
+      setIsLoggingOutAll(false);
     }
   };
 
@@ -316,17 +343,45 @@ export const UserProfile: React.FC = () => {
               </div>
             </div>
 
-            <div className="border-t border-white/10 pt-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">New Password (Optional)</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  placeholder="Leave blank to keep current password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-pink transition-colors"
-                />
-                <Lock size={18} className="absolute right-4 top-3.5 text-gray-500" />
+            <div className="border-t border-white/10 pt-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="Required if setting a new password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-pink transition-colors pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-4 top-3.5 text-gray-500 hover:text-white transition-colors"
+                  >
+                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">New Password (Optional)</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Leave blank to keep current password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-white focus:outline-none focus:border-brand-pink transition-colors pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-3.5 text-gray-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -338,6 +393,76 @@ export const UserProfile: React.FC = () => {
               {isSavingProfile ? <Loader2 className="animate-spin" size={20} /> : 'Update Profile'}
             </button>
           </form>
+
+          {/* Security Section */}
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <h3 className="text-lg font-serif text-white mb-4 flex items-center gap-2">
+              <Shield size={20} className="text-red-400" />
+              Security
+            </h3>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5 md:flex justify-between items-center">
+              <div>
+                <h4 className="text-white font-medium mb-1">Log Out Everywhere</h4>
+                <p className="text-sm text-gray-400">Sign out of all other active sessions and devices.</p>
+              </div>
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="mt-4 md:mt-0 flex items-center gap-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white px-5 py-2.5 rounded-xl font-medium transition-colors whitespace-nowrap"
+              >
+                <LogOut size={16} />
+                Log Out Everywhere
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Everywhere Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-md relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center">
+                <Shield size={24} />
+              </div>
+            </div>
+            <h3 className="text-xl font-serif text-white text-center mb-2">Verify Your Identity</h3>
+            <p className="text-gray-400 text-sm text-center mb-6">
+              Enter your current password to log out of all active sessions across all devices.
+            </p>
+            <form onSubmit={handleLogoutAllSubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  type={showLogoutPassword ? "text" : "password"}
+                  placeholder="Current Password"
+                  value={logoutPassword}
+                  onChange={(e) => setLogoutPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-white focus:outline-none focus:border-red-500 transition-colors pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutPassword(!showLogoutPassword)}
+                  className="absolute right-4 top-3.5 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showLogoutPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              <button
+                type="submit"
+                disabled={isLoggingOutAll}
+                className="w-full flex justify-center items-center bg-red-500 text-white font-semibold py-3.5 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {isLoggingOutAll ? <Loader2 className="animate-spin" size={20} /> : 'Confirm Log Out'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 

@@ -3,11 +3,12 @@ import axios from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ScrollFadeIn } from '../components/ScrollFadeIn';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -73,15 +74,22 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-mono uppercase tracking-widest text-white/70 mb-2">Password</label>
                 <input
-                  type="password"
-                  className="appearance-none relative block w-full px-4 py-3 border border-white/10 bg-black/50 placeholder-white/30 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-pink focus:border-brand-pink sm:text-sm transition-colors"
+                  type={showPassword ? "text" : "password"}
+                  className="appearance-none relative block w-full px-4 py-3 border border-white/10 bg-black/50 placeholder-white/30 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-pink focus:border-brand-pink sm:text-sm transition-colors pr-10"
                   placeholder="admin123"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-[38px] text-gray-500 hover:text-brand-pink transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 

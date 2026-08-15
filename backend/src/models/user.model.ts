@@ -20,6 +20,9 @@ export class User extends Model {
   @Column({ type: DataType.STRING, defaultValue: 'USER' })
   declare role: string;
 
+  @Column({ type: DataType.STRING })
+  declare refreshToken: string;
+
   @HasMany(() => Address)
   declare addresses: Address[];
 

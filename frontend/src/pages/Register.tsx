@@ -9,6 +9,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -82,14 +83,26 @@ const Register = () => {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-mono uppercase tracking-widest text-white/70 mb-2">Password</label>
                 <input
-                  type="password"
-                  className="appearance-none relative block w-full px-4 py-3 border border-white/10 bg-black/50 placeholder-white/30 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-pink focus:border-brand-pink sm:text-sm transition-colors"
+                  type={showPassword ? "text" : "password"}
+                  className="appearance-none relative block w-full px-4 py-3 border border-white/10 bg-black/50 placeholder-white/30 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-pink focus:border-brand-pink sm:text-sm transition-colors pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-[38px] text-gray-500 hover:text-brand-pink transition-colors"
+                >
+                  {showPassword ? <Loader2 size={20} className="hidden" /> : null}
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
               </div>
             </div>
             <div>

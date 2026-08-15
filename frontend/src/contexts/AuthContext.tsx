@@ -1,41 +1,18 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import axios from '../api';
 
 interface AuthContextType {
   user: any | null;
   login: (token: string, userData: any) => void;
-  logout: () => void;
-  isTokenValid: () => boolean;
+  logout: () => Promise<void>;
+  logoutAll: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to check if JWT token is expired
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payloadBase64 = token.split('.')[1];
-    if (!payloadBase64) return true;
-    const decodedJson = atob(payloadBase64);
-    const decoded = JSON.parse(decodedJson);
-    if (!decoded.exp) return false;
-    return decoded.exp * 1000 <= Date.now();
-  } catch {
-    return true; // Invalid token string is treated as expired
-  }
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any | null>(() => {
-    const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-
-    if (savedToken && isTokenExpired(savedToken)) {
-      // Immediately purge expired token on initialization
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return null;
-    }
-
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
@@ -45,78 +22,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await axios.post('/api/auth/logout');
+    } catch (err) {
+      console.error('Logout failed on backend, clearing local state anyway', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
-  const isTokenValid = (): boolean => {
-    const token = localStorage.getItem('token');
-    if (!token) return false;
-    return !isTokenExpired(token);
+  const logoutAll = async (password: string) => {
+    try {
+      await axios.post('/api/auth/logout-all', { password });
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    } catch (err: any) {
+      throw err;
+    }
   };
-
-  // Global Axios Interceptor for automated token expiration on API calls
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          const token = localStorage.getItem('token');
-          if (token || user) {
-            logout();
-            import('goey-toast').then(({ goeyToast }) => {
-              goeyToast.error('Session Expired', {
-                description: 'Your security token has expired. Please log in again.',
-              });
-            });
-
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
-            }
-          }
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, [user]);
-
-  // Background monitor to auto-logout if token expires while tab is open
-  useEffect(() => {
-    const checkExpiration = () => {
-      const token = localStorage.getItem('token');
-      if (token && isTokenExpired(token)) {
-        logout();
-        import('goey-toast').then(({ goeyToast }) => {
-          goeyToast.error('Session Expired', {
-            description: 'Your security token has expired due to inactivity. Please log in again.',
-          });
-        });
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-      }
-    };
-
-    // Check immediately and then every 30 seconds
-    checkExpiration();
-    const interval = setInterval(checkExpiration, 30_000);
-    // Also check when user refocuses the tab
-    window.addEventListener('focus', checkExpiration);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', checkExpiration);
-    };
-  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isTokenValid }}>
+    <AuthContext.Provider value={{ user, login, logout, logoutAll }}>
       {children}
     </AuthContext.Provider>
   );
